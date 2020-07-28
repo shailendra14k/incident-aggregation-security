@@ -13,12 +13,14 @@ import javax.ws.rs.core.Response;
 
 import com.redhat.emergency.response.incident.aggregation.model.Incident;
 import com.redhat.emergency.response.incident.aggregation.streams.IncidentInteractiveQuery;
+import io.quarkus.security.Authenticated;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,12 @@ public class IncidentResource {
     @Inject
     Vertx vertx;
 
+    @Inject
+    JsonWebToken jsonWebToken;
+
     @GET
     @Path("/incident/{id}")
+    @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
     public Response getIncident(@PathParam("id") String id) {
         Pair<Incident, String> incident = incidentInteractiveQuery.getIncident(id);
@@ -46,7 +52,8 @@ public class IncidentResource {
         } else if (incident.getRight() != null) {
             WebClient client = WebClient.create(vertx);
             CompletableFuture<Pair<Incident, Integer>> future = new CompletableFuture<>();
-            client.get(8080, incident.getRight(), "/incident/" + id).send(ar -> {
+            client.get(8080, incident.getRight(), "/incident/" + id)
+                    .bearerTokenAuthentication(jsonWebToken.getRawToken()).send(ar -> {
                 if (ar.succeeded()) {
                     HttpResponse<Buffer> response = ar.result();
                     if (response.statusCode() == Response.Status.OK.getStatusCode()) {

@@ -13,7 +13,6 @@ import javax.ws.rs.core.Response;
 
 import com.redhat.emergency.response.incident.aggregation.model.Incident;
 import com.redhat.emergency.response.incident.aggregation.streams.IncidentInteractiveQuery;
-import io.quarkus.security.Authenticated;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.ext.web.client.HttpResponse;
@@ -41,7 +40,6 @@ public class IncidentResource {
 
     @GET
     @Path("/incident/{id}")
-    @Authenticated
     @Produces(MediaType.APPLICATION_JSON)
     public Response getIncident(@PathParam("id") String id) {
         Pair<Incident, String> incident = incidentInteractiveQuery.getIncident(id);
